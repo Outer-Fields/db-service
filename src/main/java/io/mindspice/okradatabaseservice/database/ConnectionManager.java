@@ -1,4 +1,5 @@
 package io.mindspice.okradatabaseservice.database;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.mindspice.okradatabaseservice.Settings;
@@ -14,12 +15,17 @@ public class ConnectionManager {
     private static DataSource dataSource;
 
     static {
-        config.setJdbcUrl(Settings.get().databaseUrl());
+        config.setJdbcUrl(
+                Settings.get().isPsql()
+                        ? Settings.get().databaseUrl() + "?readonly=true"
+                        : Settings.get().databaseUrl()
+        );
         config.setUsername(Settings.get().databaseUsername());
         config.setPassword(Settings.get().dataBasePassword());
         config.setMaximumPoolSize(Settings.get().maxPoolSize());
         config.setIdleTimeout(Settings.get().connTimeout());
         config.setMinimumIdle(Settings.get().idleConnMin());
+        config.setDriverClassName(Settings.get().isPsql() ? "org.postgresql.Driver" : "org.sqlite.JDBC");
 
         Properties props = new Properties();
         props.setProperty("cachePrepStmts", String.valueOf(Settings.get().cachePStatements()));

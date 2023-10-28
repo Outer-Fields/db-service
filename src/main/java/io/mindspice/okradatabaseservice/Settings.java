@@ -25,8 +25,7 @@ public class Settings {
     private int pStatementCacheSize;
     private int pStatementLengthLimit;
     // For connections
-    private int socketPort;
-    private String socketPassword;
+    private String restPassword;
 
 
 
@@ -35,6 +34,7 @@ public class Settings {
     public static Settings get() {
         if (instance == null) {
             String config = System.getProperty("user.dir") + File.separator + "config.yaml";
+            System.out.println(config);
             File configFile = Path.of(config).toFile();
             var mapper = new ObjectMapper(new YAMLFactory());
             try {
@@ -87,17 +87,14 @@ public class Settings {
         return pStatementLengthLimit;
     }
 
-    public String socketPassword() {
-        return socketPassword;
-    }
-
     public boolean isPsql() {
         return isPsql;
     }
 
-    public int socketPort() {
-        return socketPort;
+    public String getRestPassword() {
+        return restPassword;
     }
+
     // For jackson
 
     private static void setInstance(Settings instance) {
@@ -140,15 +137,11 @@ public class Settings {
         this.pStatementLengthLimit = pStatementLengthLimit;
     }
 
-    private void setSocketPassword(String socketPassword) {
-        this.socketPassword = socketPassword;
-    }
-
-    public void setPsql(boolean psql) {
+    public void setIsPsql(boolean psql) {
         isPsql = psql;
     }
 
-    public void setSocketPort(int socketPort) {
-        this.socketPort = socketPort;
+    public void setRestPassword(String restPassword) {
+        this.restPassword = restPassword;
     }
 }

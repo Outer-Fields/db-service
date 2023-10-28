@@ -1,35 +1,73 @@
 package io.mindspice.okradatabaseservice;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
 
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfiguration {
 
+    @Value("${auth.internal.username}")
+    private String internalUsername;
+
+    @Value("${auth.internal.password}")
+    private String internalPassword;
+
+
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public InMemoryUserDetailsManager userDetailsService() {
+        UserDetails auth = User.withDefaultPasswordEncoder()
+                .username(internalUsername)
+                .password(internalPassword)
+                .roles("ADMIN")
+                .build();
+        return new InMemoryUserDetailsManager(auth);
+    }
+
+
+
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests((authz) -> {
-                                           try {
-                                               authz
-                                                       .anyRequest().authenticated().and()
-                                                       .csrf().disable();
-                                           } catch (Exception e) {
-                                               throw new RuntimeException(e);
-                                           }
-                                       }
-                )
-                .httpBasic(withDefaults());
+                .csrf().disable()
+                .cors().disable()
+                .httpBasic()
+                .and()
+                .authorizeHttpRequests((authz) -> authz
+                        .requestMatchers("/auth/**", "/game/**", "/nft/**", "/chia/**", "/error").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                );
         return http.build();
     }
 
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST"));
+        configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "user-agent", "token", "session-id"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 }
 

@@ -1,0 +1,11 @@
+isPsql: true
+databaseUrl: "jdbc:postgresql://192.168.1.185:5432/okra"
+databaseUsername: "okra"
+dataBasePassword: "okrapass""
+maxPoolSize: 10
+idleConnMin: 5
+connTimeout: 120000
+cachePStatements: true
+pStatementCacheSize: 100
+pStatementLengthLimit: 512
+restPassword: password
