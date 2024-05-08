@@ -664,10 +664,7 @@ public class GameRequests {
                     did = result.getString("owner_did");
                 }
             }
-            return JsonUtils.successMsg(JsonUtils.newSingleNode(
-                    "did",
-                    did == null ? "No DID Found, Must Link One In Settings" : did)
-            );
+            return JsonUtils.successMsg(JsonUtils.newSingleNode("did", did));
         } catch (
                 Exception e) {
             return JsonUtils.errorMsg(e.getMessage());
@@ -741,12 +738,12 @@ public class GameRequests {
     }
 
     public static JsonNode commitFullMatchResult(String uid, int player1, int player2, boolean player1Won,
-            boolean player2Won, int roundCount, String finishState) {
+            boolean player2Won, int roundCount, String finishState, List<String> player1Ips, List<String> player2Ips) {
         try (Connection connection = ConnectionManager.getConnection()) {
 
             String query = """
-                    INSERT INTO full_match_results(match_uid, player1, player2, player1_won, player2_won, round_count, finish_state)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO full_match_results(match_uid, player1, player2, player1_won, player2_won, round_count, finish_state, player1_ips, player2_ips)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                                        
                     """;
 
@@ -758,6 +755,8 @@ public class GameRequests {
                 pStatement.setBoolean(5, player2Won);
                 pStatement.setInt(6, roundCount);
                 pStatement.setString(7, finishState);
+                pStatement.setArray(8, connection.createArrayOf("text", player1Ips.toArray()));
+                pStatement.setArray(9, connection.createArrayOf("text", player2Ips.toArray()));
                 pStatement.execute();
             }
             return JsonUtils.successMsg(JsonUtils.newEmptyNode());
@@ -793,10 +792,10 @@ public class GameRequests {
 
             String query = """
                     INSERT INTO free_games_played (player_id, games_played)
-                          VALUES (?, 1)
-                          ON CONFLICT(player_id)
-                          DO UPDATE SET
-                          games_played = games_played + 1
+                    VALUES (?, 1)
+                    ON CONFLICT(player_id)
+                    DO UPDATE SET
+                    games_played = free_games_played.games_played + 1                                 
                     """;
 
             try (PreparedStatement pStatement = connection.prepareStatement(query)) {
@@ -811,7 +810,7 @@ public class GameRequests {
 
     public static JsonNode getFreeGamesPlayed(int playerId) {
         String query = """
-                SELECT games_played FROM games_played WHERE player_id = ?
+                SELECT games_played FROM free_games_played WHERE player_id = ?
                 """;
 
         try (Connection connection = ConnectionManager.getConnection();
@@ -835,7 +834,7 @@ public class GameRequests {
 
     public static JsonNode resetFreeGames() {
         try (Connection connection = ConnectionManager.getConnection()) {
-            String query = "TRUNCATE TABLE free_games_played";
+            String query = "UPDATE free_games_played SET games_played = 0";
 
             try (PreparedStatement pStatement = connection.prepareStatement(query)) {
                 pStatement.execute();

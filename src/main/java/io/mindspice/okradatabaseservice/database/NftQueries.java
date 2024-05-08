@@ -526,4 +526,49 @@ public class NftRequests {
         }
     }
 
+    public static JsonNode addPackPurchase(String uuid, String address, String packType, int height, String coinId) {
+        String query = """
+                    INSERT INTO pack_purchases (uuid, address, pack_type, height, coin_id)
+                    VALUES (?, ?, ?, ?, ?)
+                """;
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement pStatement = connection.prepareStatement(query)) {
+
+            pStatement.setString(1, uuid);
+            pStatement.setString(2, address);
+            pStatement.setString(3, packType);
+            pStatement.setLong(4, height);
+            pStatement.setString(5, coinId);
+            pStatement.executeUpdate();
+            return JsonUtils.successMsg(JsonUtils.newEmptyNode());
+        } catch (SQLException e) {
+            return JsonUtils.errorMsg(e.getMessage());
+//            SYSLOG.fatal("Error In updateDidForNFT :" + launcherId + " | " + e.getMessage());
+        }
+    }
+
+    public static JsonNode addFailedUpdate(String launcherId, int height, boolean isAccount, String reason) {
+        String query = """
+                    INSERT INTO failed_update (launcher_id, height, is_account, reason)
+                    VALUES (?, ?, ?, ?)
+                """;
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement pStatement = connection.prepareStatement(query)) {
+
+            pStatement.setString(1, launcherId);
+            pStatement.setLong(2, height);
+            pStatement.setBoolean(3, isAccount);
+            pStatement.setString(4, reason);
+            pStatement.executeUpdate();
+            return JsonUtils.successMsg(JsonUtils.newEmptyNode());
+        } catch (SQLException e) {
+            return JsonUtils.errorMsg(e.getMessage());
+//            SYSLOG.fatal("Error In updateDidForNFT :" + launcherId + " | " + e.getMessage());
+        }
+    }
+
+
+
+
+
 }
